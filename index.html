@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML-DL-Ops Assignment-1 | Shikhar Dave</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .badges {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .author-info {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .author-info h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav a {
+            color: #586069;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav a:hover {
+            color: #667eea;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #24292e;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+            font-size: 1.8rem;
+        }
+
+        .section h3 {
+            color: #586069;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .section h4 {
+            color: #666;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+            color: #24292e;
+        }
+
+        tr:hover {
+            background: #f6f8fa;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+        }
+
+        .figure-caption {
+            font-style: italic;
+            color: #586069;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #fef08a 0%, #fef08a 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 40%;
+            background-position: 0 90%;
+        }
+
+        .footer {
+            background: #24292e;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .emoji {
+            font-style: normal;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ML-DL-Ops Assignment-1</h1>
+        <p>Performance, Accuracy and Compute Analysis on MNIST & FashionMNIST</p>
+        <div class="badges">
+            <span class="badge">Python 3.8+</span>
+            <span class="badge">PyTorch 2.0+</span>
+            <span class="badge">CUDA Enabled</span>
+            <span class="badge">Academic Research</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="author-info">
+            <h3><span class="emoji">👤</span> Author Information</h3>
+            <p><strong>Name:</strong> Shikhar Dave</p>
+            <p><strong>Course:</strong> ML-DL-Ops</p>
+            <p><strong>Assignment:</strong> 1</p>
+        </div>
+
+        <nav class="nav">
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#structure">Structure</a></li>
+                <li><a href="#methodology">Methodology</a></li>
+                <li><a href="#results">Results</a></li>
+                <li><a href="#findings">Findings</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#conclusions">Conclusions</a></li>
+            </ul>
+        </nav>
+
+        <section id="overview" class="section">
+            <h2><span class="emoji">📌</span> Project Overview</h2>
+            <p>This repository presents a comprehensive experimental study comparing <strong>classical machine learning</strong> and <strong>deep learning</strong> approaches on two benchmark datasets: <strong>MNIST</strong> and <strong>FashionMNIST</strong>.</p>
+            
+            <h3>Research Focus</h3>
+            <p>The study investigates three critical aspects:</p>
+            <ol>
+                <li><strong>Model Performance</strong>: Accuracy, precision, recall, and F1-scores across different architectures</li>
+                <li><strong>Training Dynamics</strong>: Learning curves, convergence behavior, and optimization strategies</li>
+                <li><strong>Computational Efficiency</strong>: CPU vs GPU performance, FLOPs analysis, and parameter counts</li>
+            </ol>
+
+            <h3>Assignment Components</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Description</th>
+                        <th>Models</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Q1(b)</strong></td>
+                        <td>Classical ML experiments</td>
+                        <td>SVM with multiple kernels</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q1(a)</strong></td>
+                        <td>Deep learning experiments</td>
+                        <td>ResNet-18, ResNet-50</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q2</strong></td>
+                        <td>Compute & efficiency analysis</td>
+                        <td>CPU vs GPU comparison</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="structure" class="section">
+            <h2><span class="emoji">📂</span> Repository Structure</h2>
+            <pre><code>ML-DL-Ops-Assignment-1/
+│
+├── 📊 Data Files
+│   ├── mnist_resnet_results.csv
+│   ├── fashion_mnist_resnet_results.csv
+│   ├── svm_mnist_results.csv
+│   ├── svm_fashionmnist_results.csv
+│   └── q2results.csv
+│
+├── 📈 Visualizations
+│   ├── ResNet Results/
+│   └── SVM Results/
+│
+└── 📄 Documentation
+    └── README.md</code></pre>
+        </section>
+
+        <section id="methodology" class="section">
+            <h2><span class="emoji">🧪</span> Methodology</h2>
+            
+            <h3>Datasets</h3>
+            <div class="grid">
+                <div class="card">
+                    <h4>MNIST</h4>
+                    <p><strong>Description:</strong> Handwritten digit recognition (0-9)</p>
+                    <p><strong>Size:</strong> 70,000 grayscale images (28×28 pixels)</p>
+                    <p><strong>Classes:</strong> 10 digit classes</p>
+                </div>
+                <div class="card">
+                    <h4>FashionMNIST</h4>
+                    <p><strong>Description:</strong> Fashion product classification</p>
+                    <p><strong>Size:</strong> 70,000 grayscale images (28×28 pixels)</p>
+                    <p><strong>Classes:</strong> 10 fashion categories</p>
+                </div>
+            </div>
+
+            <h3>Data Split Strategy</h3>
+            <table>
+                <tr>
+                    <th>Split</th>
+                    <th>Percentage</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>Training</td>
+                    <td>70%</td>
+                    <td>Model training</td>
+                </tr>
+                <tr>
+                    <td>Validation</td>
+                    <td>10%</td>
+                    <td>Hyperparameter tuning</td>
+                </tr>
+                <tr>
+                    <td>Test</td>
+                    <td>20%</td>
+                    <td>Final evaluation</td>
+                </tr>
+            </table>
+
+            <h3>Q1(b): Support Vector Machines</h3>
+            <p><strong>Implementation:</strong> <code>sklearn.svm.SVC</code></p>
+            <p><strong>Kernels Explored:</strong> RBF, Polynomial</p>
+            <p><strong>Preprocessing Pipeline:</strong></p>
+            <pre><code>Raw Images → Flatten → Standard Scaling → PCA (50 components) → SVM</code></pre>
+
+            <h3>Q1(a): Deep Learning Models</h3>
+            <table>
+                <tr>
+                    <th>Model</th>
+                    <th>Layers</th>
+                    <th>Parameters</th>
+                    <th>FLOPs</th>
+                </tr>
+                <tr>
+                    <td>ResNet-18</td>
+                    <td>18</td>
+                    <td>~11.2M</td>
+                    <td>~1.8G</td>
+                </tr>
+                <tr>
+                    <td>ResNet-50</td>
+                    <td>50</td>
+                    <td>~23.5M</td>
+                    <td>~4.1G</td>
+                </tr>
+            </table>
+
+            <h3>Q2: Compute Analysis</h3>
+            <p><strong>Metrics Tracked:</strong></p>
+            <ul>
+                <li>Training Time (wall-clock, ms)</li>
+                <li>MACs (Multiply-Accumulate Operations)</li>
+                <li>FLOPs (Floating Point Operations)</li>
+                <li>Total Parameters</li>
+            </ul>
+        </section>
+
+        <section id="results" class="section">
+            <h2><span class="emoji">📊</span> Results & Visualizations</h2>
+            
+            <h3>Deep Learning: Training Dynamics</h3>
+            
+            <h4>MNIST Training Curves</h4>
+            <img src="mnist_training_curves.png" alt="MNIST Training Curves">
+            <p class="figure-caption">Figure 1: Training and validation accuracy/loss curves for ResNet-18 and ResNet-50 on MNIST</p>
+
+            <h4>FashionMNIST Training Curves</h4>
+            <img src="fashion_training_curves.png" alt="FashionMNIST Training Curves">
+            <p class="figure-caption">Figure 2: Training and validation accuracy/loss curves for ResNet-18 and ResNet-50 on FashionMNIST</p>
+
+            <h3>Deep Learning: Accuracy Analysis</h3>
+            
+            <h4>MNIST Performance Heatmap</h4>
+            <img src="mnist_heatmap.png" alt="MNIST Heatmap">
+            <p class="figure-caption">Figure 3: Test accuracy heatmap across model-optimizer combinations on MNIST</p>
+
+            <h4>FashionMNIST Performance Heatmap</h4>
+            <img src="fashion_heatmap.png" alt="FashionMNIST Heatmap">
+            <p class="figure-caption">Figure 4: Test accuracy heatmap across model-optimizer combinations on FashionMNIST</p>
+
+            <h3>SVM Results</h3>
+            
+            <div class="grid">
+                <div>
+                    <h4>MNIST</h4>
+                    <img src="svm_mnist_overview.png" alt="SVM MNIST Overview">
+                    <p class="figure-caption">SVM kernel comparison on MNIST</p>
+                </div>
+                <div>
+                    <h4>FashionMNIST</h4>
+                    <img src="svm_fashionmnist_overview.png" alt="SVM FashionMNIST Overview">
+                    <p class="figure-caption">SVM kernel comparison on FashionMNIST</p>
+                </div>
+            </div>
+
+            <h4>Confusion Matrices</h4>
+            <div class="grid">
+                <div>
+                    <img src="svm_mnist_confusion_matrix.png" alt="SVM MNIST Confusion Matrix">
+                    <p class="figure-caption">Best SVM on MNIST</p>
+                </div>
+                <div>
+                    <img src="svm_fashionmnist_confusion_matrix.png" alt="SVM FashionMNIST Confusion Matrix">
+                    <p class="figure-caption">Best SVM on FashionMNIST</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="findings" class="section">
+            <h2><span class="emoji">🔑</span> Key Findings</h2>
+            
+            <h3>Q2: CPU vs GPU Performance</h3>
+            <table>
+                <tr>
+                    <th>Device</th>
+                    <th>MNIST Training Time</th>
+                    <th>FashionMNIST Training Time</th>
+                    <th>Speedup</th>
+                </tr>
+                <tr>
+                    <td>CPU</td>
+                    <td>~850ms/epoch</td>
+                    <td>~920ms/epoch</td>
+                    <td>1× (baseline)</td>
+                </tr>
+                <tr>
+                    <td>GPU</td>
+                    <td>~75ms/epoch</td>
+                    <td>~85ms/epoch</td>
+                    <td><strong>~11× faster</strong></td>
+                </tr>
+            </table>
+
+            <h3>Model Complexity Trade-offs</h3>
+            <table>
+                <tr>
+                    <th>Model</th>
+                    <th>Parameters</th>
+                    <th>FLOPs (per sample)</th>
+                    <th>Accuracy Trade-off</th>
+                </tr>
+                <tr>
+                    <td>ResNet-18</td>
+                    <td>11.2M</td>
+                    <td>1.8G</td>
+                    <td>Higher (short training)</td>
+                </tr>
+                <tr>
+                    <td>ResNet-50</td>
+                    <td>23.5M (+110%)</td>
+                    <td>4.3G (+139%)</td>
+                    <td>Lower (needs more epochs)</td>
+                </tr>
+            </table>
+
+            <h3>Classical ML vs Deep Learning</h3>
+            <div class="grid">
+                <div class="card">
+                    <h4>MNIST Performance</h4>
+                    <p><strong>SVM (RBF):</strong> ~97.5% accuracy</p>
+                    <p><strong>ResNet-18:</strong> ~98.8% accuracy</p>
+                    <p><em>Insight:</em> Deep learning shows moderate gains on simple datasets</p>
+                </div>
+                <div class="card">
+                    <h4>FashionMNIST Performance</h4>
+                    <p><strong>SVM (RBF):</strong> ~86% accuracy</p>
+                    <p><strong>ResNet-18:</strong> ~91%+ accuracy</p>
+                    <p><em>Insight:</em> Deep learning excels on complex datasets</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation" class="section">
+            <h2><span class="emoji">🛠</span> Installation</h2>
+            
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>Python 3.8 or higher</li>
+                <li>CUDA-compatible GPU (optional, for GPU experiments)</li>
+            </ul>
+
+            <h3>Setup Instructions</h3>
+            <pre><code># Clone the repository
+git clone https://github.com/yourusername/ML-DL-Ops-Assignment-1.git
+cd ML-DL-Ops-Assignment-1
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install torch torchvision scikit-learn pandas matplotlib seaborn ptflops tqdm</code></pre>
+
+            <h3>Quick Start</h3>
+            <pre><code># Run SVM experiments
+python svm_experiments.py
+
+# Run ResNet experiments
+python resnet_experiments.py
+
+# Run compute analysis
+python compute_analysis.py</code></pre>
+        </section>
+
+        <section id="conclusions" class="section">
+            <h2><span class="emoji">🎓</span> Conclusions</h2>
+            
+            <h3>Summary of Findings</h3>
+            <ol>
+                <li><span class="highlight"><strong>GPU Acceleration is Essential:</strong></span> 8-12× speedup over CPU for deep learning workloads</li>
+                <li><strong>Model Selection Matters:</strong> ResNet-18 offers best accuracy-to-compute ratio for short training</li>
+                <li><strong>Dataset Complexity Impacts Model Choice:</strong> Classical ML sufficient for MNIST, deep learning necessary for FashionMNIST</li>
+                <li><strong>Optimization Strategy is Critical:</strong> Adam for rapid prototyping, SGD for production</li>
+                <li><strong>Deeper Networks Need More Care:</strong> ResNet-50 requires extended training to justify complexity</li>
+            </ol>
+
+            <h3>Practical Recommendations</h3>
+            <table>
+                <tr>
+                    <th>Scenario</th>
+                    <th>Recommended Approach</th>
+                </tr>
+                <tr>
+                    <td>Quick baseline</td>
+                    <td>SVM with RBF kernel</td>
+                </tr>
+                <tr>
+                    <td>Production accuracy</td>
+                    <td>ResNet-18 + Adam</td>
+                </tr>
+                <tr>
+                    <td>Maximum performance</td>
+                    <td>ResNet-50 + extended training</td>
+                </tr>
+                <tr>
+                    <td>Limited compute</td>
+                    <td>SVM or shallow CNN</td>
+                </tr>
+            </table>
+        </section>
+
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="https://github.com/yourusername/ML-DL-Ops-Assignment-1" class="btn">View on GitHub</a>
+            <a href="mailto:your.email@university.edu" class="btn">Contact Author</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>ML-DL-Ops Assignment-1</strong></p>
+        <p>Author: Shikhar Dave | Course: ML-DL-Ops</p>
+        <p style="margin-top: 1rem; opacity: 0.8;">
+            © 2026 | For academic use only | 
+            <a href="https://github.com/yourusername/ML-DL-Ops-Assignment-1">GitHub Repository</a>
+        </p>
+        <p style="margin-top: 1rem;">
+            ⭐ If you found this work helpful, please consider starring the repository! ⭐
+        </p>
+    </div>
+</body>
+</html>
