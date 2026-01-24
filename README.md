@@ -57,43 +57,6 @@ The study investigates three critical aspects:
 
 ---
 
-## 📂 Repository Structure
-```
-ML-DL-Ops-Assignment-1/
-│
-├── 📊 Data Files
-│   ├── mnist_resnet_results.csv
-│   ├── fashion_mnist_resnet_results.csv
-│   ├── svm_mnist_results.csv
-│   ├── svm_fashionmnist_results.csv
-│   └── q2results.csv
-│
-├── 📈 Visualizations
-│   │
-│   ├── ResNet Results
-│   │   ├── mnist_training_curves.png
-│   │   ├── fashion_training_curves.png
-│   │   ├── mnist_heatmap.png
-│   │   ├── fashion_heatmap.png
-│   │   ├── mnist_model_comparison.png
-│   │   └── fashion_model_comparison.png
-│   │
-│   └── SVM Results
-│       ├── svm_mnist_overview.png
-│       ├── svm_mnist_confusion_matrix.png
-│       ├── svm_mnist_poly_degree.png
-│       ├── svm_mnist_rbf_params.png
-│       ├── svm_fashionmnist_overview.png
-│       ├── svm_fashionmnist_confusion_matrix.png
-│       ├── svm_fashionmnist_poly_degree.png
-│       └── svm_fashionmnist_rbf_params.png
-│
-└── 📄 Documentation
-    └── README.md
-```
-
----
-
 ## 🎯 Datasets
 
 ### MNIST
@@ -583,12 +546,6 @@ This project is submitted for academic evaluation as part of the ML-DL-Ops cours
 ## 📬 Contact
 
 **Shikhar Dave**
-
-For questions, clarifications, or collaboration:
-
-- 📧 Email: [your.email@university.edu]
-- 💼 LinkedIn: [Your LinkedIn Profile]
-- 🐙 GitHub: [Your GitHub Profile]
 
 ---
 
