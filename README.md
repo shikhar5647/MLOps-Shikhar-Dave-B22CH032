@@ -385,8 +385,8 @@ For ResNet-50 to outperform ResNet-18:
 ### Setup Instructions
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ML-DL-Ops-Assignment-1.git
-cd ML-DL-Ops-Assignment-1
+git clone https://github.com/shikhar5647/MLOps-Shikhar-Dave-B22CH032.git
+cd Assignment-1
 
 # Create virtual environment (recommended)
 python -m venv venv
