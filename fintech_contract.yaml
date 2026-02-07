@@ -1,0 +1,148 @@
+# ===============================================================
+# DATA CONTRACT: FinTech Transaction Log (fintech_contract.yaml)
+# ===============================================================
+# NEGOTIATION SUMMARY
+# Producer: Core Transactions Team (payments-core@bank.com)
+# Consumer: Real-time Fraud Detection (ml-fraud@bank.com)
+#
+# Agreed Terms:
+#  - Logical field names decouple consumers from physical column names.
+#  - Critical correctness rule: acct_src (account_source_id) MUST be exactly
+#    10 characters long and contain only uppercase A–Z and digits 0–9.
+#  - This rule is enforced with a HARD CIRCUIT BREAKER: ANY violation MUST
+#    block the pipeline (no silent warnings).
+#
+# Signed off: Payments Data Lead + Fraud ML Lead
+# Effective date: 2026-02-07
+# ===============================================================
+
+dataContractSpecification: 0.9.3
+id: urn:datacontract:bank:tx-log
+version: 1.0.0
+
+info:
+  title: "Transaction Log — tx_log (Contract for Fraud Detection)"
+  description: |
+    Canonical contract for the transaction log ingested by the fraud detection
+    system. This contract enforces strict account ID formatting so the fraud
+    model's lookup joins do not silently fail.
+  owner: "Payments Core / Data Platform"
+  contact:
+    name: "Payments Core - Data Platform"
+    email: "payments-core@bank.com"
+    slack: "#payments-core"
+  classification: restricted
+  tags: [fintech, transactions, fraud, pii, regex, circuit-breaker]
+
+# 1. SCHEMA (logical)
+schema:
+  type: object
+  properties:
+
+    account_source_id:
+      type: string
+      description: |
+        Logical name for source account id (mapped from physical `acct_src`).
+        MUST match exactly 10 uppercase alphanumeric characters.
+        Valid examples: "ABCD123456", "1234567890", "A1B2C3D4E5".
+      pii: true
+      pattern: "^[A-Z0-9]{10}$"
+      # physical_mapping: acct_src
+
+    account_destination_id:
+      type: string
+      description: |
+        Logical name for destination account id (mapped from physical `acct_dest`).
+        Best practice: same format as source account id. Producers should ensure
+        consistency; consumer teams may require the same regex.
+      pii: true
+      pattern: "^[A-Z0-9]{10}$"
+      # physical_mapping: acct_dest
+
+    transaction_timestamp:
+      type: string
+      format: date-time
+      description: "Logical mapping from physical column `tx_ts`."
+      pii: false
+      # physical_mapping: tx_ts
+
+  required:
+    - account_source_id
+    - account_destination_id
+    - transaction_timestamp
+
+# 2. SLA
+sla:
+  freshness:
+    threshold: "30 seconds"
+    description: "Transactions must be available within 30s for real-time scoring."
+  availability:
+    percentage: "99.9%"
+
+# 3. DATA QUALITY RULES (including regex-based rule for acct_src)
+quality:
+
+  - name: acct_src_format
+    type: validity
+    column: account_source_id
+    # Use a regex match expression -- enforce EXACTLY 10 uppercase alphanumeric chars
+    expression: "REGEX_MATCH(account_source_id, '^[A-Z0-9]{10}$')"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Account source ID must be exactly 10 characters long and only contain
+      uppercase letters A-Z and digits 0-9. THIS IS A HARD CIRCUIT-BREAKER:
+      any record violating this rule MUST block the pipeline to prevent the
+      fraud model from silently missing lookups.
+
+  - name: acct_dest_format
+    type: validity
+    column: account_destination_id
+    expression: "REGEX_MATCH(account_destination_id, '^[A-Z0-9]{10}$')"
+    threshold: "100%"
+    enforcement: hard
+    description: "Account destination ID must follow the same format as source."
+
+  - name: transaction_timestamp_valid
+    type: validity
+    column: transaction_timestamp
+    expression: "IS_VALID_DATETIME(transaction_timestamp)"
+    threshold: "100%"
+    enforcement: hard
+    description: "Transaction timestamp must be a valid ISO-8601 datetime."
+
+# 4. ENFORCEMENT (explicit hard circuit-breaker behavior)
+enforcement:
+  default_failure_action: "block_pipeline_hard_circuit_breaker"
+  # Explicitly indicate this is a HARD circuit breaker for acct_src violations
+  hard_circuit_breaker_rules:
+    - acct_src_format
+  notify_on_hard_failure:
+    - "payments-core@bank.com"
+    - "ml-fraud@bank.com"
+    - "oncall-data@bank.com"
+  remediation:
+    - "Immediately block ingestion and quarantine offending batch/stream partition."
+    - "Create incident with full sample of offending records and physical column mapping (acct_src)."
+    - "If failure rate > 0.05% over 5 minutes, escalate to emergency rollback of producer deploy."
+  notes: |
+    The acct_src_format rule is safety-critical. Do NOT convert or pad malformed
+    acct_src values automatically. Any automatic mitigation must be explicitly
+    agreed by both producer and consumer teams and reflected in this contract.
+
+# 5. LINEAGE & CONSUMERS
+lineage:
+  sources:
+    - name: core_tx_db
+      type: postgresql
+      table: tx_log
+      description: "Physical table tx_log (physical columns: acct_src, acct_dest, tx_ts)."
+  consumers:
+    - name: fraud_detection
+      team: ml-fraud
+      usage: "Real-time scoring and lookup joins against account risk tables."
+
+# 6. METADATA
+metadata:
+  created_by: "payments-core@bank.com"
+  created_on: "2026-02-07"
