@@ -1,0 +1,148 @@
+# ===============================================================
+# DATA CONTRACT: FlashSale Orders Stream (orders_contract.yaml)
+# ===============================================================
+# NEGOTIATION SUMMARY
+# Producer: Ecom Orders Team (data-platform@shopco.com)
+# Consumer: Marketing Dashboard (marketing@shopco.com)
+#
+# Agreed Terms:
+#  - Logical field names provided for dashboard consumption.
+#  - Freshness: low-latency stream (near real-time) required for ad-spend decisions.
+#  - Quality rules:
+#      * order_total_usd (from o_total) must be non-negative (HARD enforcement).
+#      * status_code must map to one of [PAID, SHIPPED, CANCELLED]; unmapped codes
+#        must be rejected (HARD enforcement) to avoid dashboard crashes.
+#  - On HARD failures: block pipeline, quarantine offending batch/record, notify teams.
+#
+# Signed off: Data Eng Lead + Marketing Dashboard Lead
+# Effective date: 2025-02-01
+# ===============================================================
+
+dataContractSpecification: 0.9.3
+id: urn:datacontract:shopco:flashsale-orders
+version: 1.0.0
+
+info:
+  title: "ShopCo Flash Sale Orders (Real-time Order Stream)"
+  description: |
+    Canonical logical view of orders emitted during flash/marketing events.
+    This contract stabilizes the interface between the orders producer and the
+    Marketing Dashboard consumer so ad-spend decisions remain reliable.
+  owner: "Ecom Data Platform"
+  contact:
+    name: "Orders Stream - Data Platform"
+    email: "data-platform@shopco.com"
+    slack: "#orders-stream"
+  classification: internal
+  tags: [orders, flashsale, marketing, realtime]
+
+# 2. SCHEMA DEFINITION (Logical Contract)
+schema:
+  type: object
+  properties:
+
+    order_id:
+      type: string
+      description: "Unique order identifier. Logical mapping from physical column `order_id`."
+      pii: false
+      # physical_mapping: order_id
+
+    order_total_usd:
+      type: number
+      description: |
+        Order total in USD. Logical mapping from physical column `o_total`.
+        This is the total charged amount (items + tax + shipping).
+      minimum: 0.0
+      pii: false
+      # physical_mapping: o_total
+
+    status:
+      type: string
+      enum: [PAID, SHIPPED, CANCELLED]
+      description: |
+        Logical order status mapped from integer `status_code`.
+        Mapping:
+          2 -> PAID
+          5 -> SHIPPED
+          9 -> CANCELLED
+      pii: false
+      # physical_mapping: status_code
+
+  required:
+    - order_id
+    - order_total_usd
+    - status
+
+# 3. SLAs (producer/consumer negotiated)
+sla:
+  freshness:
+    threshold: "5 minutes"
+    description: "Time from order event to availability in the marketing feed."
+  availability:
+    percentage: "99.5%"
+    description: "Target availability of the real-time order stream."
+
+# 4. DATA QUALITY RULES
+quality:
+
+  - name: order_total_non_negative
+    type: validity
+    column: order_total_usd
+    expression: "order_total_usd >= 0.0"
+    threshold: "100%"
+    enforcement: hard
+    description: "Order total must be non-negative. Negative totals indicate upstream bug and must block the pipeline."
+
+  - name: status_code_mapped_enum
+    type: validity
+    column: status
+    expression: "status IN ('PAID', 'SHIPPED', 'CANCELLED')"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Status must be one of the allowed enum values after mapping status_code -> status.
+      Unmapped/incompatible codes must cause record rejection.
+
+  - name: physical_status_code_whitelist
+    type: validity
+    column: status_code
+    expression: "status_code IN (2, 5, 9)"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Physical status_code must be one of the accepted integers (2,5,9).
+      This rule rejects codes like 7 which previously caused dashboard crashes.
+
+# 5. ENFORCEMENT STRATEGY & REMEDIATION
+enforcement:
+  default_failure_action: "block_and_quarantine"
+  notify_on_hard_failure:
+    - "data-platform@shopco.com"
+    - "marketing@shopco.com"
+  remediation:
+    - "Quarantine offending record(s) and create incident ticket."
+    - "If mapping table missing, auto-fallback to last-known-good mapping only when safe."
+    - "Fail-fast: do NOT convert unknown codes to 'UNKNOWN' silently (prevents dashboard errors)."
+  notes: |
+    Hard enforcement chosen because both negative totals and unmapped status codes
+    previously crashed downstream dashboards during high-traffic events.
+
+# 6. LINEAGE & CONSUMERS
+lineage:
+  sources:
+    - name: orders_ingest
+      type: kafka
+      topic: orders_raw
+      description: "Raw orders stream produced by order service (physical fields: o_total, status_code, order_id)."
+  consumers:
+    - name: marketing_dashboard
+      team: marketing
+      usage: "Real-time ad-spend decisions and dashboards."
+    - name: analytics_replay
+      team: analytics
+      usage: "Post-event analysis and reconciliation."
+
+# 7. METADATA
+metadata:
+  created_by: "data-platform@shopco.com"
+  created_on: "2025-02-01"
