@@ -1,0 +1,157 @@
+# ===============================================================
+# DATA CONTRACT: Smart Thermostat Fleet (thermostat_contract.yaml)
+# ===============================================================
+# NEGOTIATION SUMMARY
+# Producer: ThermoSense Device Team (iot-platform@acme.com)
+# Consumer: Home Analytics & Reporting (analytics@acme.com)
+#
+# Agreed Terms:
+#  - Logical field names map physical telemetry fields to stable business names.
+#  - Telemetry arrives every minute; consumers require near-real-time availability.
+#  - Quality rules:
+#      * temperature_c must be within [-30, 60] °C (inclusive). Readings outside
+#        this range (including the sentinel 9999°C) are invalid and must be rejected.
+#      * battery_level must be in [0.0, 1.0] inclusive.
+#  - Enforcement: Invalid telemetry should be quarantined (per-record) and NOT silently
+#    forwarded to aggregation jobs to avoid skewing metrics. Notifications sent to both
+#    producer and consumer teams for remediation.
+#
+# Signed off: IOT Platform Lead + Analytics Lead
+# Effective date: 2025-02-01
+# ===============================================================
+
+dataContractSpecification: 0.9.3
+id: urn:datacontract:acme:thermostat-fleet
+version: 1.0.0
+
+info:
+  title: "ThermoSense Smart Thermostat Telemetry"
+  description: |
+    Minute-level telemetry from a fleet of smart thermostats. Primary consumer is
+    the Home Analytics pipeline which computes metrics like average home temperature
+    and battery-health trends. This contract guarantees the telemetry stays within
+    valid physical ranges so aggregate metrics are not skewed by faulty sensors.
+  owner: "ThermoSense Device Team"
+  contact:
+    name: "IoT Platform - Telemetry"
+    email: "iot-platform@acme.com"
+    slack: "#iot-telemetry"
+  classification: internal
+  tags: [iot, thermostat, telemetry, sla, quality]
+
+# 2. SCHEMA DEFINITION (Logical Contract)
+schema:
+  type: object
+  properties:
+
+    device_id:
+      type: string
+      description: |
+        Unique thermostat identifier (logical). Mapped from physical field `dev_id`.
+      pii: false
+      # physical_mapping: dev_id
+
+    temperature_c:
+      type: number
+      description: |
+        Reported temperature in degrees Celsius. Mapped from physical field `temp_c`.
+        Valid physical range: -30 <= temperature_c <= 60 (inclusive). Device firmware
+        sometimes reports 9999 as a failure sentinel — this must be treated as invalid.
+      minimum: -30
+      maximum: 60
+      pii: false
+      # physical_mapping: temp_c
+
+    battery_level:
+      type: number
+      description: |
+        Battery level as a decimal fraction (0.0 = empty, 1.0 = full). Mapped from
+        physical field `batt_lvl`. Inclusive bounds allowed (0.0 and 1.0 are valid).
+      minimum: 0.0
+      maximum: 1.0
+      pii: false
+      # physical_mapping: batt_lvl
+
+  required:
+    - device_id
+    - temperature_c
+    - battery_level
+
+# 3. SERVICE LEVEL AGREEMENTS (SLAs)
+sla:
+  freshness:
+    threshold: "2 minutes"
+    description: "Telemetry must be available to consumers within 2 minutes of device publish (devices emit every minute)."
+  availability:
+    percentage: "99.0%"
+    description: "Target availability of the telemetry ingestion pipeline."
+  retention:
+    period: "90 days"
+    description: "Raw telemetry retained for debugging and backfill."
+
+# 4. DATA QUALITY RULES
+quality:
+
+  - name: temperature_range_valid
+    type: validity
+    expression: "temperature_c >= -30 AND temperature_c <= 60"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Temperature must lie within the physically plausible range [-30, 60] °C.
+      Values outside this range (including extreme sentinel values like 9999) are
+      rejected to prevent skew in aggregations.
+
+  - name: temperature_not_sentinel
+    type: validity
+    expression: "temperature_c != 9999"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Sensor failure sentinel (9999) must be rejected explicitly; treat as invalid
+      rather than attempt best-effort mapping.
+
+  - name: battery_level_valid
+    type: validity
+    expression: "battery_level >= 0.0 AND battery_level <= 1.0"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Battery must be between 0.0 and 1.0 inclusive. Values outside this indicate
+      sensor malfunction or encoding error and must be quarantined.
+
+# 5. ENFORCEMENT STRATEGY (Record-level quarantine preferred for IoT)
+enforcement:
+  default_failure_action: "quarantine_record"
+  notify_on_hard_failure:
+    - "iot-platform@acme.com"
+    - "analytics@acme.com"
+  remediation:
+    - "Quarantine the offending record(s) with full payload and device metadata."
+    - "If >1% of a device's last-hour messages are quarantined, auto-open an incident and mark device for remote-reboot/diagnostics."
+    - "If a firmware mapping/codec change is detected, auto-apply last-known-good codec only after approval."
+  notes: |
+    For high-cardinality IoT streams we prefer quarantining bad records (not blocking the
+    whole stream) to maintain availability while protecting aggregates. However, if a
+    systemic failure is detected (e.g., >5% of incoming records across devices fail),
+    the platform will escalate and may switch to a degraded mode.
+
+# 6. LINEAGE & CONSUMERS
+lineage:
+  sources:
+    - name: thermosense_gateway
+      type: kafka
+      topic: thermostat_telemetry_raw
+      description: "Raw JSON telemetry emitted by device gateways (physical fields: dev_id, temp_c, batt_lvl)."
+  consumers:
+    - name: home_analytics
+      team: analytics
+      usage: "Aggregate metrics, alerts, dashboards (average temperature, battery health)."
+    - name: device-monitoring
+      team: ops
+      usage: "Device health monitoring, firmware rollouts."
+
+# 7. METADATA
+metadata:
+  created_by: "iot-platform@acme.com"
+  created_on: "2025-02-01"
