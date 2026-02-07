@@ -1,0 +1,203 @@
+# ===============================================================
+# DATA CONTRACT: CityMove Ride Events (rides_contract.yaml)
+# ===============================================================
+# NEGOTIATION SUMMARY
+# Producer: CityMove - Data Engineering (data-platform@citymove.com)
+# Consumer: Machine Learning Team - Dynamic Pricing (ml-pricing@citymove.com)
+#
+# Agreed Terms:
+#  - Logical field names map cryptic DB columns to clear business names.
+#  - Freshness SLA: data must be available within 30 minutes of ride completion.
+#  - Quality rules (fare non-negative, driver rating 1.0-5.0, distance non-null)
+#    are enforced as HARD (pipeline-blocking) to protect model stability.
+#  - Passenger identifier (passenger_id) is PII and is tagged restricted; access
+#    to raw passenger_id requires explicit consumer authorization.
+#  - Trade-off: Producer will add a monitoring notification and auto-quarantine
+#    step for remediation to avoid long outages; ML team agreed on immediate
+#    rollback / circuit-breaker if rule fails.
+#
+# Signed off: Data Eng Lead (producer) + ML Pricing Lead (consumer)
+# Effective date: 2025-02-01
+# ===============================================================
+
+dataContractSpecification: 0.9.3
+id: urn:datacontract:citymove:ride-events
+version: 1.0.0
+
+info:
+  title: "CityMove Ride Events (Contract for Dynamic Pricing)"
+  description: |
+    Canonical logical view of ride events used by the Dynamic Pricing ML model.
+    This contract exposes a stable schema, quality rules, and SLAs so consumers
+    (pricing models, analytics) can rely on consistent inputs despite
+    producer-side operational schema changes.
+  owner: "CityMove Data Engineering"
+  contact:
+    name: "Data Platform - Ride Events"
+    email: "data-platform@citymove.com"
+    slack: "#data-platform-rides"
+  classification: restricted
+  tags: [rides, pricing, pii, sla, realtime]
+
+# 2. SCHEMA DEFINITION (Logical Contract)
+schema:
+  type: object
+  properties:
+
+    ride_id:
+      type: string
+      description: |
+        Unique ride identifier. Logical mapping from physical column `r_id`.
+        Example: "a1-b2-c3".
+      pii: false
+      # physical_mapping: r_id
+
+    pickup_timestamp:
+      type: string
+      format: date-time
+      description: |
+        UTC timestamp when the ride started / passenger picked up.
+        Logical mapping from physical column `ts_start`.
+      pii: false
+      # physical_mapping: ts_start
+
+    passenger_id:
+      type: integer
+      description: |
+        Internal passenger identifier (PII). Producers must mask or tokenize for
+        unauthorised consumers. Logical mapping from `pax_id`.
+      pii: true
+      # physical_mapping: pax_id
+
+    driver_rating:
+      type: number
+      minimum: 1.0
+      maximum: 5.0
+      description: |
+        Driver rating at time of ride (scale 1.0 - 5.0). Logical mapping from
+        `d_rating`.
+      pii: false
+      # physical_mapping: d_rating
+
+    fare_usd:
+      type: number
+      minimum: 0.0
+      description: |
+        Total fare charged for ride in USD. Non-negative. Logical mapping from
+        `fare_final` (previously named `cost_total`).
+      pii: false
+      # physical_mapping: fare_final
+
+    distance_meters:
+      type: integer
+      minimum: 0
+      description: |
+        Distance traveled in meters. Must not be null. Logical mapping from
+        `dist_m`.
+      pii: false
+      # physical_mapping: dist_m
+
+  required:
+    - ride_id
+    - pickup_timestamp
+    - passenger_id
+    - fare_usd
+    - driver_rating
+    - distance_meters
+
+# 3. SERVICE LEVEL AGREEMENTS (SLAs)
+sla:
+  freshness:
+    threshold: "30 minutes"
+    description: "Time from ride completion to data availability for consumers."
+  availability:
+    percentage: "99.5%"
+    description: "Target availability of published feed for consumers."
+  retention:
+    period: "1 year"
+    description: "Event history retention for pricing model retraining."
+
+# 4. DATA QUALITY RULES
+quality:
+
+  - name: ride_id_uniqueness
+    type: uniqueness
+    column: ride_id
+    threshold: "100%"
+    enforcement: hard
+    description: "Each ride_id must be unique; duplicates block the pipeline."
+
+  - name: distance_not_null
+    type: completeness
+    column: distance_meters
+    threshold: "100%"
+    enforcement: hard
+    description: "Distance must be present (not NULL). Missing distance blocks ingestion."
+
+  - name: fare_non_negative
+    type: validity
+    expression: "fare_usd >= 0.0"
+    threshold: "100%"
+    enforcement: hard
+    description: |
+      Fare must never be negative. If negative values are detected the circuit
+      breaker MUST block the pipeline, quarantine the offending batch/record,
+      and notify Data Engineering + ML Pricing teams.
+
+  - name: driver_rating_range
+    type: validity
+    expression: "driver_rating >= 1.0 AND driver_rating <= 5.0"
+    threshold: "100%"
+    enforcement: hard
+    description: "Driver rating must be within the inclusive range 1.0 - 5.0."
+
+  - name: timestamp_format_valid
+    type: validity
+    expression: "IS_VALID_DATETIME(pickup_timestamp)"
+    threshold: "100%"
+    enforcement: hard
+    description: "pickup_timestamp must be a valid ISO-8601 datetime string."
+
+  - name: passenger_id_pii_tag
+    type: governance
+    column: passenger_id
+    threshold: "100%"
+    enforcement: soft
+    description: |
+      passenger_id is PII. Access to raw passenger_id requires explicit permission.
+      Producers should provide a masked/tokenized version for general consumers.
+
+# 5. ENFORCEMENT STRATEGY (Circuit Breaker behavior)
+enforcement:
+  default_failure_action: "block_and_quarantine"
+  notify_on_hard_failure:
+    - "data-platform@citymove.com"
+    - "ml-pricing@citymove.com"
+  remediation:
+    - "Quarantine bad batch and open incident."
+    - "Auto-apply last-known-good schema mapping if only schema rename detected."
+    - "If corruption, rollback producer deploy and trigger manual revert."
+  notes: |
+    Hard enforcement rules will block the pipeline (HARD circuit breaker).
+    For non-sensitive governance rules (e.g., pii tagging), enforcement is soft
+    (warn + mask) to avoid unnecessary outages.
+
+# 6. LINEAGE & CONSUMERS
+lineage:
+  sources:
+    - name: citymove_pg
+      type: postgresql
+      table: raw_rides_log_v2
+      description: "Operational rides log (producer). Columns are cryptic and may change."
+  consumers:
+    - name: dynamic_pricing_model
+      team: ml-pricing
+      usage: "Real-time pricing model training and scoring (retrain hourly)."
+    - name: ride_analytics
+      team: analytics
+      usage: "Ad-hoc analytics and dashboards."
+
+# 7. METADATA
+metadata:
+  created_by: "data-platform@citymove.com"
+  created_on: "2025-02-01"
