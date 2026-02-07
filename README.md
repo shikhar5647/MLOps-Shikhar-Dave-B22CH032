@@ -691,7 +691,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 **Project Maintainer:** Shikhar Dave
-- Email: your.email@example.com
+- Email: b22ch032@iitj.ac.in
 - GitHub: [@shikhar5647](https://github.com/shikhar5647)
 ---
 
