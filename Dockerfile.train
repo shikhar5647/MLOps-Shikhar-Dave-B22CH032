@@ -1,0 +1,37 @@
+# ----------------------------------------
+# New training container — resnet-trainer-v2
+# Works on Mac M-series (ARM64) + Linux x86
+# ----------------------------------------
+
+# Force ARM64 platform so pip picks correct torch wheels
+FROM --platform=linux/arm64 python:3.11-slim
+
+WORKDIR /app
+
+# System dependencies for matplotlib + Pillow (libgl1 replaces mesa on Trixie)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 \
+    libgl1 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install torch first (separate step so layer is cached on rebuild)
+RUN pip install --no-cache-dir \
+    torch==2.2.0 \
+    torchvision==0.17.0
+
+# Install remaining dependencies
+RUN pip install --no-cache-dir \
+    numpy\
+    scikit-learn\
+    Pillow \
+    matplotlib
+
+# Copy training script
+COPY train.py .
+
+# Create plots output directory (will be overridden by volume mount)
+RUN mkdir -p training_plots
+
+# Default command
+CMD ["python", "train.py"]
