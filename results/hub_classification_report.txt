@@ -1,0 +1,14 @@
+              precision    recall  f1-score   support
+
+    children       0.17      0.33      0.23       100
+      comics       0.33      0.16      0.21       100
+     fantasy       0.18      0.03      0.05       100
+     history       0.17      0.60      0.26       100
+     mystery       0.00      0.00      0.00       100
+      poetry       0.60      0.30      0.40       100
+     romance       0.33      0.38      0.36       100
+ young_adult       0.33      0.08      0.13       100
+
+    accuracy                           0.23       800
+   macro avg       0.26      0.24      0.21       800
+weighted avg       0.26      0.23      0.21       800
