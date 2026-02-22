@@ -1,0 +1,10 @@
+transformers
+torch
+datasets
+huggingface_hub
+scikit-learn
+numpy
+pandas
+requests
+gdown
+accelerate
