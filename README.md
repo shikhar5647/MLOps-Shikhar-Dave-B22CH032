@@ -28,7 +28,8 @@ This assignment optimizes a custom **English → Hindi Transformer** translation
 
 The `.pth` model files are hosted on HuggingFace due to GitHub file size limits:
 
-🔗 **[HuggingFace Model Repository ](https://huggingface.co/Shikhar16/assignment_4_Models)**
+🔗 **[HuggingFace Model Repository ](https://huggingface.co/Shikhar16/assignment_4_Models/tree/main)**
+
 
 
 ---
